@@ -3,7 +3,7 @@ from flask_login import current_user, login_user, logout_user, login_required
 from werkzeug.urls import url_parse
 
 from app import app, db
-from app.forms import LoginForm, RegistrationForm
+from app.forms import LoginForm, RegistrationForm, ForgotForm
 from app.models import User
 
 @app.route('/')
@@ -53,6 +53,22 @@ def register():
         return redirect(url_for('login'))
     return render_template('register.html', title='Register', form=form)
 
+@app.route('/forgot_password', methods=['GET', 'POST'])
+def forgot_password():
+    form = ForgotForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(username=form.username.data).first()
+        if user is None:
+            flash('User is not exist')
+            return redirect(url_for('forgot_password'))
+        user.set_password('new-password')
+        db.session.add(user)
+        db.session.commit()
+        flash('Your New Password: new-password')
+        return redirect(url_for('login'))
+    return render_template('forgot_password.html', form=form)
+
+    
 @app.route('/logout')
 def logout():
     logout_user()
